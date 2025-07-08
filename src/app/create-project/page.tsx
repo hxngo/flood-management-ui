@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useState, useRef, useEffect, Suspense } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import SearchParamsWrapper from './SearchParamsWrapper';
 
 interface AttachedFile {
   id: string;
@@ -25,7 +26,7 @@ const requiredDocuments = [
   { key: 'president-report', label: 'Report and Recommendation of the President' }
 ];
 
-export default function CreateProject() {
+function CreateProjectContent() {
   const [projectData, setProjectData] = useState({
     name: '',
     number: ''
@@ -41,8 +42,17 @@ export default function CreateProject() {
   const [missingDocuments, setMissingDocuments] = useState<typeof requiredDocuments>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
-  const searchParams = useSearchParams();
-  // Load user information and check edit mode
+
+  // Handle project ID from URL
+  const handleProjectIdChange = (projectId: string | null) => {
+    if (projectId) {
+      setIsEditMode(true);
+      setCurrentProjectId(projectId);
+      loadExistingProject(projectId);
+    }
+  };
+
+  // Load user information
   useEffect(() => {
     const savedUserName = localStorage.getItem('gcf_userName');
     const isLoggedIn = localStorage.getItem('gcf_isLoggedIn');
@@ -53,15 +63,7 @@ export default function CreateProject() {
     }
     
     setUserName(savedUserName);
-
-    // Check project ID from URL
-    const projectId = searchParams.get('id');
-    if (projectId) {
-      setIsEditMode(true);
-      setCurrentProjectId(projectId);
-      loadExistingProject(projectId);
-    }
-  }, [router, searchParams]);
+  }, [router]);
 
   // Load existing project
   const loadExistingProject = (projectId: string) => {
@@ -104,6 +106,7 @@ export default function CreateProject() {
       }
     }
   };
+
   // Load sample files (simulation)
   const loadSampleFiles = () => {
     const sampleFiles: AttachedFile[] = [
@@ -159,6 +162,7 @@ export default function CreateProject() {
 
     setIsUploading(false);
   };
+
   // Remove file
   const removeFile = (fileId: string) => {
     setAttachedFiles(prev => prev.filter(file => file.id !== fileId));
@@ -220,6 +224,7 @@ export default function CreateProject() {
       }
       return;
     }
+
     if (newErrors.length > 0) {
       setErrors(newErrors);
       return;
@@ -281,6 +286,7 @@ export default function CreateProject() {
       router.push('/dashboard');
     }
   };
+
   // Drag and drop handlers
   const handleDragOver = (e: React.DragEvent, category?: string) => {
     e.preventDefault();
@@ -305,6 +311,11 @@ export default function CreateProject() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Search params handler */}
+      <Suspense fallback={null}>
+        <SearchParamsWrapper onProjectIdChange={handleProjectIdChange} />
+      </Suspense>
+
       {/* Header */}
       <header className="bg-black text-white p-4">
         <div className="max-w-7xl mx-auto px-8 flex justify-between items-center">
@@ -328,6 +339,7 @@ export default function CreateProject() {
           </div>
         </div>
       </header>
+
       {/* Main Content */}
       <main className="max-w-6xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
@@ -373,6 +385,7 @@ export default function CreateProject() {
               />
             </div>
           </div>
+
           {/* File upload section */}
           <div className="bg-white border border-gray-200 rounded-lg p-8">
             <div className="mb-6">
@@ -474,6 +487,7 @@ export default function CreateProject() {
               })}
             </div>
           </div>
+
           {/* Action buttons */}
           <div className="flex justify-between items-center pt-8">
             <Link 
@@ -532,4 +546,8 @@ export default function CreateProject() {
       />
     </div>
   );
+}
+
+export default function CreateProject() {
+  return <CreateProjectContent />;
 }
