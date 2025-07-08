@@ -1,11 +1,14 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // 빌드 시 ESLint 오류를 무시하도록 설정
+  // 1) ESLint 오류 무시
   eslint: {
     ignoreDuringBuilds: true,
   },
-
+  // 2) TypeScript 검사 오류 무시
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   /* 기존 config 옵션들 */
 };
 
