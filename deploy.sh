@@ -6,7 +6,6 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-PROJECT_DIR="~/workspace/projects/hong/flood-management-ui"
 LOG_FILE="app.log"
 PORT=3000
 
@@ -22,9 +21,13 @@ check_success() {
     fi
 }
 
-# Change to project directory
-cd $PROJECT_DIR
-check_success "Directory change"
+# Check if we're in the right directory
+if [ ! -f "package.json" ]; then
+    echo -e "${RED}❌ package.json not found. Please run this script from the project root directory.${NC}"
+    exit 1
+fi
+
+echo -e "${GREEN}✅ Running from project directory: $(pwd)${NC}"
 
 # Stop existing process
 echo -e "${YELLOW}🔍 Checking for existing processes...${NC}"
