@@ -5,15 +5,15 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { extractColorsFromImageCanvas, ColorPalette } from '@/utils/colorExtractor';
 
-// Project data type definition
+// 프로젝트 데이터 타입 정의
 interface Project {
   id: number;
   name: string;
   image: string;
-  status: 'normal' | 'warning';
+  status: 'normal' | 'warning'; // 초록: 문제없음, 노랑: 의심로그 있음
 }
 
-// Sample project data
+// 샘플 프로젝트 데이터
 const sampleProjects: Project[] = [
   {
     id: 1,
@@ -32,14 +32,27 @@ const sampleProjects: Project[] = [
     name: "Vietnam : Mekong Delta Climate Resilience Project",
     image: "/1.png",
     status: "normal"
-  },
+  }  },
   {
     id: 4,
     name: "Philippines : Metro Manila Flood Management Project",
     image: "/2.png",
     status: "warning"
+  },
+  {
+    id: 5,
+    name: "Thailand : Bangkok Climate Adaptation Initiative",
+    image: "/1.png",
+    status: "normal"
+  },
+  {
+    id: 6,
+    name: "Cambodia : Flood Risk Reduction in Coastal Areas",
+    image: "/2.png",
+    status: "warning"
   }
 ];
+
 export default function Home() {
   const [gradientStyle, setGradientStyle] = useState({
     background: 'linear-gradient(to right, #2E7D32, #66BB6A, #C8E6C9)'
@@ -52,134 +65,49 @@ export default function Home() {
     tertiary: '#C8E6C9'
   });
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Check login information and project information from localStorage on component mount
-  useEffect(() => {
+  // 컴포넌트 마운트 시 localStorage에서 로그인 정보 확인
+  useEffect(() => {    console.log('=== 메인 페이지 로드 ===');
+    
     const savedUserName = localStorage.getItem('gcf_userName');
     const savedIsLoggedIn = localStorage.getItem('gcf_isLoggedIn');
+    
+    console.log('저장된 사용자 이름:', savedUserName);
+    console.log('저장된 로그인 상태:', savedIsLoggedIn);
     
     if (savedUserName && savedIsLoggedIn === 'true') {
       setUserName(savedUserName);
       setIsLoggedIn(true);
+      console.log('로그인 상태 복원 완료');
     }
-
-    // Load saved projects
-    const savedProjects = localStorage.getItem('gcf_projects');
-    const savedDeletedProjects = localStorage.getItem('gcf_deleted_projects');
-    let deletedProjectIds: number[] = [];
-    
-    if (savedDeletedProjects) {
-      try {
-        deletedProjectIds = JSON.parse(savedDeletedProjects);
-      } catch (error) {
-        console.error('Error loading deleted projects:', error);
-      }
-    }
-
-    // Include only undeleted sample projects
-    const activeSampleProjects = sampleProjects.filter(project => 
-      !deletedProjectIds.includes(project.id)
-    );
-
-    let allProjects = [...activeSampleProjects];
-
-    if (savedProjects) {
-      try {
-        const parsedProjects = JSON.parse(savedProjects);
-        parsedProjects.forEach((project: any) => {
-          if (!allProjects.find(p => p.id === parseInt(project.id))) {
-            allProjects.push({
-              id: parseInt(project.id),
-              name: project.name || project.title || `Project ${project.id}`,
-              image: "/1.png",
-              status: "normal" as const
-            });
-          }
-        });
-      } catch (error) {
-        console.error('Error loading projects:', error);
-      }
-    }
-
-    setProjects(allProjects);
   }, []);
-  // Project delete function
-  const deleteProject = (projectId: number) => {
-    const updatedProjects = projects.filter(p => p.id !== projectId);
-    setProjects(updatedProjects);
-    
-    // Check if it's a sample project deletion
-    const isSampleProject = sampleProjects.find(p => p.id === projectId);
-    
-    if (isSampleProject) {
-      // Record sample project deletion
-      const savedDeletedProjects = localStorage.getItem('gcf_deleted_projects');
-      let deletedProjectIds: number[] = [];
-      
-      if (savedDeletedProjects) {
-        try {
-          deletedProjectIds = JSON.parse(savedDeletedProjects);
-        } catch (error) {
-          console.error('Error loading deleted projects:', error);
-        }
-      }
-      
-      if (!deletedProjectIds.includes(projectId)) {
-        deletedProjectIds.push(projectId);
-        localStorage.setItem('gcf_deleted_projects', JSON.stringify(deletedProjectIds));
-      }
-    } else {
-      // Delete user-created project
-      const savedProjects = localStorage.getItem('gcf_projects');
-      if (savedProjects) {
-        try {
-          const parsedProjects = JSON.parse(savedProjects);
-          const filteredProjects = parsedProjects.filter((p: any) => parseInt(p.id) !== projectId);
-          localStorage.setItem('gcf_projects', JSON.stringify(filteredProjects));
-        } catch (error) {
-          console.error('Error deleting project:', error);
-        }
-      }
-    }
-    
-    setShowDeleteConfirm(null);
-  };
 
-  // Project status change function
-  const toggleProjectStatus = (projectId: number) => {
-    const updatedProjects = projects.map(p => 
-      p.id === projectId 
-        ? { ...p, status: p.status === 'normal' ? 'warning' : 'normal' as const }
-        : p
-    );
-    setProjects(updatedProjects);
-  };
   const updateGradient = (palette: ColorPalette) => {
     const newGradient = {
       background: `linear-gradient(to right, ${palette.primary}, ${palette.secondary}, ${palette.tertiary})`
     };
     setGradientStyle(newGradient);
     setCurrentColors(palette);
+    console.log('색상 업데이트:', palette);
   };
 
   const handleProfileImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      console.log('파일 선택됨:', file.name);
+      
       const reader = new FileReader();
       reader.onload = (e) => {
         const imageSrc = e.target?.result as string;
         setProfileImage(imageSrc);
         
-        const img = document.createElement('img') as HTMLImageElement;
-        img.onload = () => {
+        const img = document.createElement('img') as HTMLImageElement;        img.onload = () => {
           try {
             const palette = extractColorsFromImageCanvas(img);
             updateGradient(palette);
           } catch (error) {
-            console.error('Color extraction error:', error);
+            console.error('색상 추출 오류:', error);
           }
         };
         img.src = imageSrc;
@@ -187,7 +115,9 @@ export default function Home() {
       reader.readAsDataURL(file);
     }
   };
+
   const handleLogout = () => {
+    console.log('로그아웃 시작');
     localStorage.removeItem('gcf_userName');
     localStorage.removeItem('gcf_isLoggedIn');
     localStorage.removeItem('gcf_userEmail');
@@ -202,6 +132,9 @@ export default function Home() {
       secondary: '#66BB6A',
       tertiary: '#C8E6C9'
     });
+    console.log('로그아웃 완료, 로그인 페이지로 이동');
+    
+    // 로그인 페이지로 리다이렉트
     window.location.href = '/login';
   };
 
@@ -209,16 +142,17 @@ export default function Home() {
     fileInputRef.current?.click();
   };
 
-  const getStatusGradient = (status: 'normal' | 'warning') => {
+  // 프로젝트 상태에 따른 그라데이션 색상 반환  const getStatusGradient = (status: 'normal' | 'warning') => {
     if (status === 'normal') {
       return 'bg-gradient-to-t from-green-500/80 to-transparent';
     } else {
       return 'bg-gradient-to-t from-yellow-500/80 to-transparent';
     }
   };
+
   return (
     <div className="min-h-screen bg-white">
-      {/* 1366x224 Gradient Banner */}
+      {/* 1366x224 그라데이션 배너 */}
       <div 
         className="w-full relative pb-32"
         style={{
@@ -231,7 +165,9 @@ export default function Home() {
           <div className="max-w-7xl mx-auto px-8 flex justify-between items-center">
             <div className="flex items-center space-x-2">
               <div className="relative">
+                {/* 직사각형 틀만 (배경 투명) */}
                 <div className="w-8 h-4 border border-white bg-transparent"></div>
+                {/* V가 직사각형 상단 면에 바로 붙어있게 */}
                 <div className="absolute -top-5 left-1/2 transform -translate-x-1/2">
                   <span className="text-white text-xs font-bold">V</span>
                 </div>
@@ -241,23 +177,22 @@ export default function Home() {
             <div className="flex items-center space-x-4">
               {!isLoggedIn ? (
                 <Link href="/login" className="text-white/80 hover:text-white transition-colors">
-                  Login
+                  로그인
                 </Link>
-              ) : (
-                <>
+              ) : (                <>
                   <span className="text-white/90 text-sm">{userName}</span>
                   <button 
                     onClick={handleLogout}
                     className="text-white/80 hover:text-white transition-colors text-sm"
                   >
-                    Logout
+                    로그아웃
                   </button>
                 </>
               )}
               <div 
                 className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center cursor-pointer hover:bg-white/30 transition-colors relative overflow-hidden"
                 onClick={triggerFileInput}
-                title="Upload profile image to change theme colors"
+                title="프로필 이미지를 업로드하여 테마 색상을 변경하세요"
               >
                 {profileImage ? (
                   <img 
@@ -321,7 +256,7 @@ export default function Home() {
           </div>
         </div>
       </div>
-      {/* Content Section */}
+      {/* White Background Content Section */}
       <div className="bg-white relative z-10 pt-16">
         <div className="max-w-7xl mx-auto px-8 pb-16">
           {/* GCF Title */}
@@ -339,80 +274,55 @@ export default function Home() {
             )}
           </div>
 
-          {/* Project Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {/* First box: Add new project */}
-            <Link href="/create-project" className="block">
-              <div className="bg-white rounded-lg shadow-lg border border-gray-200 hover:border-green-300 hover:shadow-xl transition-all duration-200 cursor-pointer h-80 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="text-6xl text-gray-300 mb-4">+</div>
-                  <p className="text-gray-500 font-medium">Add New Project</p>
-                </div>
-              </div>
-            </Link>
-            {/* Project Cards */}
-            {projects.map((project) => (
-              <div key={project.id} className="relative group">
-                <Link href={`/create-project?id=${project.id}`} className="block">
-                  <div className="relative rounded-lg overflow-hidden shadow-lg h-80 cursor-pointer">
-                    {/* Satellite Image */}
-                    <Image
-                      src={project.image}
-                      alt={project.name}
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                    
-                    {/* Gradient overlay based on project status */}
-                    <div className={`absolute inset-0 ${getStatusGradient(project.status)}`}></div>
-                    
-                    {/* Project name */}
-                    <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                      <h3 className="text-lg font-medium leading-tight">
-                        {project.name}
-                      </h3>
-                      {/* Status indicator */}
-                      <div className="mt-2 flex items-center">
-                        <div className={`w-3 h-3 rounded-full mr-2 ${
-                          project.status === 'normal' ? 'bg-green-400' : 'bg-yellow-400'
-                        }`}></div>
-                        <span className="text-sm opacity-90">
-                          {project.status === 'normal' ? 'No Issues' : 'Suspicious Logs Found'}
-                        </span>
-                      </div>
+          {/* 프로젝트 목록 섹션 */}
+          <div className="bg-white py-12">
+            <div className="max-w-7xl mx-auto px-8">
+              {/* 프로젝트 그리드 - 3개씩 표시 */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {/* 첫 번째 박스: 새 프로젝트 추가 */}
+                <Link href="/create-project" className="block">
+                  <div className="bg-white rounded-lg shadow-lg border border-gray-200 hover:border-green-300 hover:shadow-xl transition-all duration-200 cursor-pointer h-80 flex items-center justify-center">
+                    <div className="text-center">
+                      <div className="text-6xl text-gray-300 mb-4">+</div>
+                      <p className="text-gray-500 font-medium">Add New Project</p>
                     </div>
                   </div>
                 </Link>
-                {/* Management buttons (shown on hover) */}
-                <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200 space-y-2">
-                  {/* Status change button */}
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      toggleProjectStatus(project.id);
-                    }}
-                    className="w-10 h-10 bg-white/90 rounded-full flex items-center justify-center hover:bg-white shadow-lg transition-colors"
-                    title="Change Status"
-                  >
-                    <span className="text-lg">
-                      {project.status === 'normal' ? '⚠️' : '✅'}
-                    </span>
-                  </button>
-
-                  {/* Delete button */}
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setShowDeleteConfirm(project.id);
-                    }}
-                    className="w-10 h-10 bg-red-500/90 rounded-full flex items-center justify-center hover:bg-red-600 shadow-lg transition-colors"
-                    title="Delete Project"
-                  >
-                    <span className="text-white text-lg">🗑️</span>
-                  </button>
-                </div>
+                {/* 프로젝트 카드들 */}
+                {sampleProjects.map((project) => (
+                  <Link key={project.id} href="/dashboard" className="block">
+                    <div className="relative rounded-lg overflow-hidden shadow-lg h-80 group cursor-pointer">
+                      {/* 위성사진 */}
+                      <Image
+                        src={project.image}
+                        alt={project.name}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      
+                      {/* 프로젝트 상태에 따른 그라데이션 오버레이 */}
+                      <div className={`absolute inset-0 ${getStatusGradient(project.status)}`}></div>
+                      
+                      {/* 프로젝트명 */}
+                      <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                        <h3 className="text-lg font-medium leading-tight">
+                          {project.name}
+                        </h3>
+                        {/* 상태 표시 (선택사항) */}
+                        <div className="mt-2 flex items-center">
+                          <div className={`w-3 h-3 rounded-full mr-2 ${
+                            project.status === 'normal' ? 'bg-green-400' : 'bg-yellow-400'
+                          }`}></div>
+                          <span className="text-sm opacity-90">
+                            {project.status === 'normal' ? '문제없음' : '의심로그 있음'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
               </div>
-            ))}
+            </div>
           </div>
         </div>
       </div>
@@ -442,39 +352,12 @@ export default function Home() {
           </button>
         )}
         
-        {/* Debug information */}
+        {/* 디버그 정보 */}
         <div className="text-xs text-gray-500 mt-2 border-t pt-2">
           <div>User: {userName}</div>
           <div>Logged: {isLoggedIn ? 'Yes' : 'No'}</div>
-          <div>Projects: {projects.length}</div>
         </div>
       </div>
-
-      {/* Delete confirmation modal */}
-      {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Delete Project</h3>
-            <p className="text-gray-600 mb-6">
-              Are you sure you want to delete this project? This action cannot be undone.
-            </p>
-            <div className="flex space-x-4">
-              <button
-                onClick={() => setShowDeleteConfirm(null)}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => deleteProject(showDeleteConfirm)}
-                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
