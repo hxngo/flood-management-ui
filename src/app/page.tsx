@@ -26,18 +26,6 @@ const sampleProjects: Project[] = [
     name: "Indonesia : Flood Management in North Java Project", 
     image: "/2.png",
     status: "warning"
-  },
-  {
-    id: 3,
-    name: "Vietnam : Mekong Delta Climate Resilience Project",
-    image: "/1.png",
-    status: "normal"
-  },
-  {
-    id: 4,
-    name: "Philippines : Metro Manila Flood Management Project",
-    image: "/2.png",
-    status: "warning"
   }
 ];
 export default function Home() {
@@ -152,7 +140,7 @@ export default function Home() {
   const toggleProjectStatus = (projectId: number) => {
     const updatedProjects = projects.map(p => 
       p.id === projectId 
-        ? { ...p, status: p.status === 'normal' ? 'warning' : 'normal' as const }
+        ? { ...p, status: p.status === 'normal' ? 'warning' as const : 'normal' as const }
         : p
     );
     setProjects(updatedProjects);
@@ -338,12 +326,26 @@ export default function Home() {
               </>
             )}
           </div>
+          
+          {/* Navigation Buttons */}
+          <div className="flex justify-end mb-8 px-8">
+            <div className="flex space-x-4">
+              <Link href="/dashboard" className="inline-flex items-center px-4 py-2 bg-blue-100 text-blue-700 font-medium rounded-md hover:bg-blue-200 transition-colors">
+                <span className="mr-2">📊</span>
+                Dashboard
+              </Link>
+              <Link href="/world-map" className="inline-flex items-center px-4 py-2 bg-green-100 text-green-700 font-medium rounded-md hover:bg-green-200 transition-colors">
+                <span className="mr-2">🌎</span>
+                World Map
+              </Link>
+            </div>
+          </div>
 
           {/* Project Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {/* First box: Add new project */}
-            <Link href="/create-project" className="block">
-              <div className="bg-white rounded-lg shadow-lg border border-gray-200 hover:border-green-300 hover:shadow-xl transition-all duration-200 cursor-pointer h-80 flex items-center justify-center">
+            <Link href="/dashboard" className="block">
+              <div className="bg-white rounded-lg shadow-lg border border-gray-200 hover:border-green-300 hover:shadow-xl transition-all duration-200 cursor-pointer h-96 flex items-center justify-center">
                 <div className="text-center">
                   <div className="text-6xl text-gray-300 mb-4">+</div>
                   <p className="text-gray-500 font-medium">Add New Project</p>
@@ -353,102 +355,72 @@ export default function Home() {
             {/* Project Cards */}
             {projects.map((project) => (
               <div key={project.id} className="relative group">
-                <Link href={`/create-project?id=${project.id}`} className="block">
-                  <div className="relative rounded-lg overflow-hidden shadow-lg h-80 cursor-pointer">
-                    {/* Satellite Image */}
-                    <Image
-                      src={project.image}
-                      alt={project.name}
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
+                <Link href={project.id <= 2 ? `/dashboard?id=${project.id}` : `/create-project?id=${project.id}`} className="block">
+                  <div className="relative rounded-lg overflow-hidden shadow-lg h-96 cursor-pointer flex flex-col">
+                    {/* Satellite Image - 2/3 of the card */}
+                    <div className="relative flex-[2] overflow-hidden">
+                      <Image
+                        src={project.image}
+                        alt={project.name}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      {/* Gradient overlay based on project status */}
+                      <div className={`absolute inset-0 ${getStatusGradient(project.status)}`}></div>
+                      
+                      {/* Management buttons (shown on hover) */}
+                      <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200 space-y-2">
+                        {/* Status change button */}
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            toggleProjectStatus(project.id);
+                          }}
+                          className="w-10 h-10 bg-white/90 rounded-full flex items-center justify-center hover:bg-white shadow-lg transition-colors"
+                          title="Change Status"
+                        >
+                          <span className="text-lg">
+                            {project.status === 'normal' ? '⚠️' : '✅'}
+                          </span>
+                        </button>
+
+                        {/* Delete button */}
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setShowDeleteConfirm(project.id);
+                          }}
+                          className="w-10 h-10 bg-red-500/90 rounded-full flex items-center justify-center hover:bg-red-600 shadow-lg transition-colors"
+                          title="Delete Project"
+                        >
+                          <span className="text-white text-lg">🗑️</span>
+                        </button>
+                      </div>
+                    </div>
                     
-                    {/* Gradient overlay based on project status */}
-                    <div className={`absolute inset-0 ${getStatusGradient(project.status)}`}></div>
-                    
-                    {/* Project name */}
-                    <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                      <h3 className="text-lg font-medium leading-tight">
+                    {/* Project info section - 1/3 of the card */}
+                    <div className="flex-1 bg-white p-4 flex flex-col justify-center">
+                      <h3 className="text-base font-medium leading-tight text-black mb-2">
                         {project.name}
                       </h3>
                       {/* Status indicator */}
-                      <div className="mt-2 flex items-center">
-                        <div className={`w-3 h-3 rounded-full mr-2 ${
+                      <div className="flex items-center">
+                        <div className={`w-2 h-2 rounded-full mr-1.5 ${
                           project.status === 'normal' ? 'bg-green-400' : 'bg-yellow-400'
                         }`}></div>
-                        <span className="text-sm opacity-90">
+                        <span className="text-xs text-gray-600">
                           {project.status === 'normal' ? 'No Issues' : 'Suspicious Logs Found'}
                         </span>
                       </div>
                     </div>
                   </div>
                 </Link>
-                {/* Management buttons (shown on hover) */}
-                <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200 space-y-2">
-                  {/* Status change button */}
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      toggleProjectStatus(project.id);
-                    }}
-                    className="w-10 h-10 bg-white/90 rounded-full flex items-center justify-center hover:bg-white shadow-lg transition-colors"
-                    title="Change Status"
-                  >
-                    <span className="text-lg">
-                      {project.status === 'normal' ? '⚠️' : '✅'}
-                    </span>
-                  </button>
-
-                  {/* Delete button */}
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      setShowDeleteConfirm(project.id);
-                    }}
-                    className="w-10 h-10 bg-red-500/90 rounded-full flex items-center justify-center hover:bg-red-600 shadow-lg transition-colors"
-                    title="Delete Project"
-                  >
-                    <span className="text-white text-lg">🗑️</span>
-                  </button>
-                </div>
               </div>
             ))}
           </div>
         </div>
       </div>
-      {/* Color Theme Indicator */}
-      <div className="fixed bottom-4 right-4 bg-white/90 backdrop-blur-sm rounded-lg p-3 shadow-lg">
-        <div className="text-xs text-gray-600 mb-2">Current Theme Colors:</div>
-        <div className="flex space-x-2 mb-3">
-          <div 
-            className="w-6 h-6 rounded-full border border-gray-300"
-            style={{ background: currentColors.primary }}
-          />
-          <div 
-            className="w-6 h-6 rounded-full border border-gray-300"
-            style={{ background: currentColors.secondary }}
-          />
-          <div 
-            className="w-6 h-6 rounded-full border border-gray-300"
-            style={{ background: currentColors.tertiary }}
-          />
-        </div>
-        {isLoggedIn && (
-          <button
-            onClick={handleLogout}
-            className="w-full text-xs bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded transition-colors"
-          >
-            Reset Profile
-          </button>
-        )}
-        
-        {/* Debug information */}
-        <div className="text-xs text-gray-500 mt-2 border-t pt-2">
-          <div>User: {userName}</div>
-          <div>Logged: {isLoggedIn ? 'Yes' : 'No'}</div>
-          <div>Projects: {projects.length}</div>
-        </div>
-      </div>
+      {/* Color Theme Indicator has been removed */}
 
       {/* Delete confirmation modal */}
       {showDeleteConfirm && (

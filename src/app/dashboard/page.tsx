@@ -4,10 +4,15 @@ import React, { useState, useRef } from 'react';
 import Link from 'next/link';
 
 export default function Dashboard() {
-  const [activeTab, setActiveTab] = useState('plan');
+  const [activeTab, setActiveTab] = useState('monitoring');
+  const [subTab, setSubTab] = useState('logs'); // logs와 plan 서브탭 선택 상태 추가
   const [selectedYear, setSelectedYear] = useState('2013');
   const [generatedReport, setGeneratedReport] = useState('');
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showFileDropdown, setShowFileDropdown] = useState(false);
+  const [isDraggingFile, setIsDraggingFile] = useState(false); // 파일 드래그 상태
 
   // 줌 및 팬 상태
   const [zoom, setZoom] = useState(1);
@@ -121,14 +126,53 @@ export default function Dashboard() {
     setSelectedYear(year);
     resetZoom();
   };
+  
+  // 파일 업로드 처리 함수
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const newFiles = Array.from(e.target.files);
+      setUploadedFiles(prev => [...prev, ...newFiles]);
+      setShowUploadModal(false);
+    }
+  };
+  
+  // 파일 삭제 함수
+  const removeFile = (index: number) => {
+    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+  
+  // 드래그 앤 드롭 함수
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingFile(true);
+  };
+  
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingFile(false);
+  };
+  
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingFile(false);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const newFiles = Array.from(e.dataTransfer.files);
+      setUploadedFiles(prev => [...prev, ...newFiles]);
+      setShowUploadModal(false);
+    }
+  };
 
   const projectInfo = {
-    projectName: "Bangladesh Dhaka Flood Management Project",
-    projectNumber: "51-01",
-    country: "Bangladesh",
+    projectName: "Indonesia Jakarta Coastal Defense Strategy",
+    projectNumber: "63-07",
+    country: "Indonesia",
     projectStatus: "Active",
-    fundingSource: "Asian Development Bank - $300 million loan",
-    description: "This project aims to support flood risk management systems."
+    fundingSource: "World Bank - $450 million loan",
+    description: "This project aims to protect Jakarta from sea level rise and land subsidence."
   };
 
   const generateReport = () => {
@@ -218,16 +262,6 @@ The project demonstrates solid 63% completion progress. The comprehensive approa
         <div className="max-w-7xl mx-auto px-8">
           <div className="flex space-x-8">
             <button
-              onClick={() => setActiveTab('plan')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'plan'
-                  ? 'border-green-500 text-green-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              Plan
-            </button>
-            <button
               onClick={() => setActiveTab('monitoring')}
               className={`py-4 px-1 border-b-2 font-medium text-sm ${
                 activeTab === 'monitoring'
@@ -252,48 +286,10 @@ The project demonstrates solid 63% completion progress. The comprehensive approa
       </nav>
 
       <main className="max-w-7xl mx-auto px-8 py-8">
-        {activeTab === 'plan' && (
-          <div className="bg-white shadow rounded-lg p-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Basic Project Information</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-500">Project Name</label>
-                  <p className="mt-1 text-lg text-gray-900">{projectInfo.projectName}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-500">Project Number</label>
-                  <p className="mt-1 text-lg text-gray-900">{projectInfo.projectNumber}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-500">Country</label>
-                  <p className="mt-1 text-lg text-gray-900">{projectInfo.country}</p>
-                </div>
-              </div>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-500">Project Status</label>
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                    {projectInfo.projectStatus}
-                  </span>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-500">Funding Source</label>
-                  <p className="mt-1 text-lg text-gray-900">{projectInfo.fundingSource}</p>
-                </div>
-              </div>
-            </div>
-            <div className="mt-6">
-              <label className="block text-sm font-medium text-gray-500">Description</label>
-              <p className="mt-1 text-lg text-gray-900">{projectInfo.description}</p>
-            </div>
-          </div>
-        )}
-
         {activeTab === 'monitoring' && (
           <div className="space-y-8">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-1">
+              <div className="lg:col-span-2">
                 <div className="bg-white rounded-lg shadow-lg overflow-hidden">
                   <div className="p-4 bg-gray-50 border-b">
                     <div className="flex justify-between items-center mb-3">
@@ -356,7 +352,7 @@ The project demonstrates solid 63% completion progress. The comprehensive approa
                     </div>
 
                     <div 
-                      className={`w-full h-64 relative overflow-hidden bg-gray-800 select-none ${
+                      className={`w-full h-96 relative overflow-hidden bg-gray-800 select-none ${
                         zoom > 1 && !isDragging ? 'cursor-grab' : 
                         zoom > 1 && isDragging ? 'cursor-grabbing' : 
                         'cursor-default'
@@ -375,7 +371,7 @@ The project demonstrates solid 63% completion progress. The comprehensive approa
                       <img 
                         src={`/${selectedYear}.png`}
                         alt={`Satellite view ${selectedYear}`}
-                        className={`w-full h-full object-cover transition-opacity duration-500 select-none ${
+                        className={`w-full h-full object-contain transition-opacity duration-500 select-none ${
                           isDragging ? 'opacity-90' : 'opacity-100'
                         }`}
                         style={{ 
@@ -423,35 +419,21 @@ The project demonstrates solid 63% completion progress. The comprehensive approa
                   </div>
                   
                   <div className="p-4 bg-white">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    <h3 className="text-lg font-semibold text-gray-900">
                       Project Development Timeline
                     </h3>
-                    <p className="text-sm text-gray-600 mb-3">
-                      Satellite imagery showing project area development from {selectedYear}.
-                      <br />
-                      <span className="text-xs text-gray-500">
-                        <strong>Controls:</strong> Mouse wheel or +/- buttons to zoom • Click and drag to pan when zoomed in • Reset button to return to original size
-                      </span>
-                    </p>
-                    
-                    <div className="grid grid-cols-1 gap-4 text-center">
-                      <div className="bg-gray-50 rounded p-2">
-                        <div className="text-lg font-bold text-green-600">{selectedYear}</div>
-                        <div className="text-xs text-gray-500">Year</div>
-                      </div>
-                    </div>
                   </div>
                 </div>
               </div>
               
-              <div className="lg:col-span-2 space-y-6">
+              <div className="lg:col-span-1 space-y-6">
                 <div className="bg-yellow-50 border-l-4 border-yellow-400 p-6 rounded-lg">
                   <div className="flex items-center">
                     <div className="bg-yellow-400 rounded-full p-2 mr-4">
                       <span className="text-white text-xl">⚠</span>
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold text-yellow-800">Suspicious Log Detected</h3>
+                      <h3 className="text-lg font-semibold text-yellow-800">Jakarta Bay Sensor Anomaly</h3>
                     </div>
                   </div>
                 </div>
@@ -483,64 +465,243 @@ The project demonstrates solid 63% completion progress. The comprehensive approa
             </div>
             
             <div className="bg-white rounded-lg shadow-lg">
+              {/* 서브탭 UI 추가 */}
               <div className="border-b border-gray-200">
-                <div className="px-6 py-4">
-                  <h3 className="text-lg font-semibold text-gray-900">Project Activity Logs</h3>
-                  <p className="text-sm text-gray-500">Blockchain-verified transactions • Real-time monitoring</p>
+                <div className="px-6 pt-4">
+                  <div className="flex space-x-8">
+                    <button
+                      onClick={() => setSubTab('logs')}
+                      className={`py-4 px-1 border-b-2 font-medium text-sm ${subTab === 'logs'
+                        ? 'border-blue-500 text-blue-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      }`}
+                    >
+                      Project Activity Logs
+                    </button>
+                    <button
+                      onClick={() => setSubTab('plan')}
+                      className={`py-4 px-1 border-b-2 font-medium text-sm ${subTab === 'plan'
+                        ? 'border-blue-500 text-blue-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      }`}
+                    >
+                      Project Plan
+                    </button>
+                  </div>
                 </div>
               </div>
               <div className="p-6">
-                <div className="space-y-3">
-                  <div className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                        <span className="font-medium text-gray-900">Embankment Construction Phase 1 Completed</span>
-                        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">blk_001</span>
+                {subTab === 'logs' && (
+                  <div className="space-y-3">
+                    <div className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                          <span className="font-medium text-gray-900">Giant Sea Wall Phase 1 Construction Completed</span>
+                          <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">blk_001</span>
+                        </div>
+                        <span className="text-sm text-gray-500">Jan 15, 2024</span>
                       </div>
-                      <span className="text-sm text-gray-500">Jan 15, 2024</span>
+                      <p className="text-sm text-gray-600 mb-2">자카르타 베이 방조제(NCICD) 1단계 구간 완공. 위성 및 해안 모니터링 시스템 가동으로 구조 안정성 확인됨.</p>
+                      <div className="flex items-center space-x-4 text-xs text-gray-500">
+                        <span className="flex items-center">
+                          <span className="mr-1">📍</span>
+                          -6.1063, 106.7912
+                        </span>
+                        <span className="flex items-center">
+                          <span className="mr-1">#</span>
+                          0x7d865e959b2466918c9863afca942d0fb89d7c9ac0c99bafc3749504ded97730...
+                        </span>
+                        <span className="px-2 py-1 rounded text-xs bg-green-100 text-green-800">
+                          SAFE
+                        </span>
+                      </div>
                     </div>
-                    <p className="text-sm text-gray-600 mb-2">첫 번째 구간 제방 건설 완료. 위성 데이터 검증을 통해 구조적 안정성 확인.</p>
-                    <div className="flex items-center space-x-4 text-xs text-gray-500">
-                      <span className="flex items-center">
-                        <span className="mr-1">📍</span>
-                        23.8103, 90.4125
-                      </span>
-                      <span className="flex items-center">
-                        <span className="mr-1">#</span>
-                        0x7d865e959b2466918c9863afca942d0fb89d7c9ac0c99bafc3749504ded97730...
-                      </span>
-                      <span className="px-2 py-1 rounded text-xs bg-green-100 text-green-800">
-                        SAFE
-                      </span>
+                    
+                    <div className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                          <span className="font-medium text-gray-900">Land Subsidence Warning in North Jakarta</span>
+                          <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">blk_002</span>
+                        </div>
+                        <span className="text-sm text-gray-500">Jan 20, 2024</span>
+                      </div>
+                      <p className="text-sm text-gray-600 mb-2">북부 자카르타 지역에서 이상성 지반 침하 속도 감지. 예상 속도보다 15% 빠른 농도로 해수면 침입 위험이 즉시 조치 필요.</p>
+                      <div className="flex items-center space-x-4 text-xs text-gray-500">
+                        <span className="flex items-center">
+                          <span className="mr-1">📍</span>
+                          -6.0892, 106.8151
+                        </span>
+                        <span className="flex items-center">
+                          <span className="mr-1">#</span>
+                          0xa1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456...
+                        </span>
+                        <span className="px-2 py-1 rounded text-xs bg-yellow-100 text-yellow-800">
+                          WARNING
+                        </span>
+                      </div>
                     </div>
                   </div>
-                  
-                  <div className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                        <span className="font-medium text-gray-900">Unusual Water Level Detected</span>
-                        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">blk_002</span>
+                )}
+                
+                {subTab === 'plan' && (
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-6">Basic Project Information</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-500">Project Name</label>
+                          <p className="mt-1 text-lg text-gray-900">Indonesia Jakarta Coastal Defense Strategy</p>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-500">Project Number</label>
+                          <p className="mt-1 text-lg text-gray-900">63-07</p>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-500">Country</label>
+                          <p className="mt-1 text-lg text-gray-900">Indonesia</p>
+                        </div>
                       </div>
-                      <span className="text-sm text-gray-500">Jan 20, 2024</span>
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-500">Project Status</label>
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            In Progress (63%)
+                          </span>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-500">Funding Source</label>
+                          <p className="mt-1 text-lg text-gray-900">World Bank - $450 million loan</p>
+                        </div>
+                      </div>
                     </div>
-                    <p className="text-sm text-gray-600 mb-2">수위 모니터링 시스템에서 평상시보다 높은 수위가 감지되었습니다.</p>
-                    <div className="flex items-center space-x-4 text-xs text-gray-500">
-                      <span className="flex items-center">
-                        <span className="mr-1">📍</span>
-                        23.8234, 90.4256
-                      </span>
-                      <span className="flex items-center">
-                        <span className="mr-1">#</span>
-                        0xa1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456...
-                      </span>
-                      <span className="px-2 py-1 rounded text-xs bg-yellow-100 text-yellow-800">
-                        WARNING
-                      </span>
+                    <div className="border-b pb-4 mb-4 flex justify-between items-center">
+                      <h3 className="text-xl font-semibold text-gray-900">Jakarta Coastal Defense and Flood Management Strategy</h3>
+                      <div className="flex items-center space-x-3">
+                        <button
+                          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center transition-colors"
+                          onClick={() => setShowUploadModal(true)}
+                        >
+                          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                          </svg>
+                          Add Document
+                        </button>
+                        
+                        {/* 파일 위젯 */}
+                        <div 
+                          className="relative" 
+                          onMouseEnter={() => setShowFileDropdown(true)}
+                          onMouseLeave={() => setShowFileDropdown(false)}
+                          onDragOver={handleDragOver}
+                          onDragLeave={handleDragLeave}
+                          onDrop={handleDrop}
+                        >
+                          <div className={`h-10 w-10 ${isDraggingFile ? 'bg-blue-100 ring-2 ring-blue-500' : 'bg-gray-100'} rounded-md flex items-center justify-center cursor-pointer hover:bg-gray-200 transition-colors relative`}>
+                            <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z"></path>
+                            </svg>
+                            {uploadedFiles.length > 0 && (
+                              <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                                {uploadedFiles.length}
+                              </span>
+                            )}
+                          </div>
+                          
+                          {/* 드롭다운 파일 목록 */}
+                          {showFileDropdown && uploadedFiles.length > 0 && (
+                            <div className="absolute right-0 mt-2 w-64 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
+                              <div className="px-3 py-2 border-b border-gray-200">
+                                <h4 className="text-sm font-semibold text-gray-700">Project Documents</h4>
+                              </div>
+                              <div className="max-h-60 overflow-y-auto">
+                                {uploadedFiles.map((file, index) => (
+                                  <div key={index} className="px-3 py-2 hover:bg-gray-100 flex items-center justify-between">
+                                    <div className="flex items-center">
+                                      <svg className="w-4 h-4 text-gray-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                      </svg>
+                                      <div className="truncate w-40">
+                                        <p className="text-xs font-medium text-gray-900 truncate">{file.name}</p>
+                                        <p className="text-xs text-gray-500">{(file.size / 1024).toFixed(1)} KB</p>
+                                      </div>
+                                    </div>
+                                    <button 
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        removeFile(index);
+                                      }}
+                                      className="text-red-500 hover:text-red-700"
+                                    >
+                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                      </svg>
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mb-6">
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">Risk Assessment</h3>
+                      <p className="text-gray-700">Jakarta faces severe flooding threats from multiple sources: sea level rise, land subsidence (sinking at 25cm per year in some areas), and high rainfall during the wet season from November to March. Approximately 40% of Jakarta is below sea level, making coastal areas particularly vulnerable.</p>
+                    </div>
+                    
+                    <div className="space-y-6">
+                      <div className="bg-blue-50 p-6 rounded-lg">
+                        <h3 className="text-lg font-medium text-blue-800 mb-4">Coastal Defense & Flood Mitigation</h3>
+                        <div className="space-y-3">
+                          <div className="flex items-start">
+                            <span className="inline-block w-8 text-gray-600 font-medium">1.</span>
+                            <span className="text-gray-800 leading-relaxed">Giant Sea Wall (NCICD) - 32km offshore seawall to protect Jakarta Bay</span>
+                          </div>
+                          <div className="flex items-start">
+                            <span className="inline-block w-8 text-gray-600 font-medium">2.</span>
+                            <span className="text-gray-800 leading-relaxed">Pluit Pumping Station upgrade - capacity increase to 16,000 liters/second</span>
+                          </div>
+                          <div className="flex items-start">
+                            <span className="inline-block w-8 text-gray-600 font-medium">3.</span>
+                            <span className="text-gray-800 leading-relaxed">East Flood Canal expansion (13.5km) connecting 13 rivers</span>
+                          </div>
+                          <div className="flex items-start">
+                            <span className="inline-block w-8 text-gray-600 font-medium">4.</span>
+                            <span className="text-gray-800 leading-relaxed">West Flood Canal dredging and wall reinforcement</span>
+                          </div>
+                          <div className="flex items-start">
+                            <span className="inline-block w-8 text-gray-600 font-medium">5.</span>
+                            <span className="text-gray-800 leading-relaxed">Ciliwung River normalization and diversion tunnel to East Flood Canal</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-green-50 p-6 rounded-lg">
+                        <h3 className="text-lg font-medium text-green-800 mb-4">Water Resource Management</h3>
+                        <div className="space-y-3">
+                          <div className="flex items-start">
+                            <span className="inline-block w-8 text-gray-600 font-medium">1.</span>
+                            <span className="text-gray-800 leading-relaxed">Jatiluhur Dam rehabilitation - primary water source for western Jakarta</span>
+                          </div>
+                          <div className="flex items-start">
+                            <span className="inline-block w-8 text-gray-600 font-medium">2.</span>
+                            <span className="text-gray-800 leading-relaxed">Groundwater extraction regulation and monitoring system</span>
+                          </div>
+                          <div className="flex items-start">
+                            <span className="inline-block w-8 text-gray-600 font-medium">3.</span>
+                            <span className="text-gray-800 leading-relaxed">Seawater desalination plant (capacity: 300,000 m³/day)</span>
+                          </div>
+                          <div className="flex items-start">
+                            <span className="inline-block w-8 text-gray-600 font-medium">4.</span>
+                            <span className="text-gray-800 leading-relaxed">Cisadane-Ciliwung water transfer canal construction</span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
               </div>
             </div>
           </div>
@@ -649,6 +810,73 @@ The project demonstrates solid 63% completion progress. The comprehensive approa
           </div>
         )}
       </main>
+
+      {/* 파일 업로드 모달 */}
+      {showUploadModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-medium text-gray-900">Upload Documents</h3>
+              <button 
+                onClick={() => setShowUploadModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </button>
+            </div>
+            
+            <div className="mb-4">
+              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="file-upload">
+                Select files to upload
+              </label>
+              <div 
+                className={`mt-1 flex justify-center px-6 pt-5 pb-6 border-2 ${isDraggingFile ? 'border-blue-500 bg-blue-50' : 'border-gray-300'} border-dashed rounded-md transition-colors`}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+              >
+                <div className="space-y-1 text-center">
+                  <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
+                    <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <div className="flex text-sm text-gray-600">
+                    <label htmlFor="file-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none">
+                      <span>Browse files</span>
+                      <input id="file-upload" name="file-upload" type="file" className="sr-only" multiple onChange={handleFileUpload} />
+                    </label>
+                    <p className="pl-1">or drag and drop</p>
+                  </div>
+                  <p className="text-xs text-gray-500">PDF, DOC, DOCX, XLS, XLSX up to 10MB</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex justify-end space-x-3">
+              <button
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
+                onClick={() => setShowUploadModal(false)}
+              >
+                Cancel
+              </button>
+              <label 
+                htmlFor="file-upload-btn"
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors cursor-pointer"
+              >
+                Upload Files
+                <input 
+                  id="file-upload-btn" 
+                  type="file" 
+                  className="hidden" 
+                  multiple 
+                  onChange={handleFileUpload}
+                />
+              </label>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

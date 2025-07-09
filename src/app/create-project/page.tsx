@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, Suspense } from 'react';
+import { useState, useRef, useEffect, Suspense, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import SearchParamsWrapper from './SearchParamsWrapper';
@@ -43,15 +43,6 @@ function CreateProjectContent() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
-  // Handle project ID from URL
-  const handleProjectIdChange = (projectId: string | null) => {
-    if (projectId) {
-      setIsEditMode(true);
-      setCurrentProjectId(projectId);
-      loadExistingProject(projectId);
-    }
-  };
-
   // Load user information
   useEffect(() => {
     const savedUserName = localStorage.getItem('gcf_userName');
@@ -65,14 +56,37 @@ function CreateProjectContent() {
     setUserName(savedUserName);
   }, [router]);
 
+  // Load sample files (simulation)
+  const loadSampleFiles = useCallback(() => {
+    const sampleFiles: AttachedFile[] = [
+      {
+        id: 'sample-1',
+        name: 'Project Concept Note.docx',
+        size: 1024000,
+        type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        dataUrl: 'data:application/vnd.openxmlformats-officedocument.wordprocessingml.document;base64,sample',
+        uploadedAt: new Date().toISOString(),
+        category: 'project-concept'
+      },
+      {
+        id: 'sample-2',
+        name: 'Detailed Feasibility Study Report.docx',
+        size: 2048000,
+        type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        dataUrl: 'data:application/vnd.openxmlformats-officedocument.wordprocessingml.document;base64,sample',
+        uploadedAt: new Date().toISOString(),
+        category: 'feasibility-study'
+      }
+    ];
+    setAttachedFiles(sampleFiles);
+  }, []);
+
   // Load existing project
-  const loadExistingProject = (projectId: string) => {
+  const loadExistingProject = useCallback((projectId: string) => {
     // Check if it's a sample project
     const sampleProjects = [
       { id: '1', name: 'Bangladesh : Flood and River-bank Erosion Risk Management Investment Program', number: '51-01' },
-      { id: '2', name: 'Indonesia : Flood Management in North Java Project', number: '51-02' },
-      { id: '3', name: 'Vietnam : Mekong Delta Climate Resilience Project', number: '51-03' },
-      { id: '4', name: 'Philippines : Metro Manila Flood Management Project', number: '51-04' }
+      { id: '2', name: 'Indonesia : Flood Management in North Java Project', number: '51-02' }
     ];
 
     const sampleProject = sampleProjects.find(p => p.id === projectId);
@@ -105,32 +119,16 @@ function CreateProjectContent() {
         console.error('Project load error:', error);
       }
     }
-  };
+  }, [loadSampleFiles]);
 
-  // Load sample files (simulation)
-  const loadSampleFiles = () => {
-    const sampleFiles: AttachedFile[] = [
-      {
-        id: 'sample-1',
-        name: 'Project Concept Note.docx',
-        size: 1024000,
-        type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        dataUrl: 'data:application/vnd.openxmlformats-officedocument.wordprocessingml.document;base64,sample',
-        uploadedAt: new Date().toISOString(),
-        category: 'project-concept'
-      },
-      {
-        id: 'sample-2',
-        name: 'Detailed Feasibility Study Report.docx',
-        size: 2048000,
-        type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        dataUrl: 'data:application/vnd.openxmlformats-officedocument.wordprocessingml.document;base64,sample',
-        uploadedAt: new Date().toISOString(),
-        category: 'feasibility-study'
-      }
-    ];
-    setAttachedFiles(sampleFiles);
-  };
+  // Handle project ID from URL
+  const handleProjectIdChange = useCallback((projectId: string | null) => {
+    if (projectId) {
+      setIsEditMode(true);
+      setCurrentProjectId(projectId);
+      loadExistingProject(projectId);
+    }
+  }, [loadExistingProject]);
 
   // Handle file upload
   const handleFileUpload = (files: FileList, category?: string) => {
