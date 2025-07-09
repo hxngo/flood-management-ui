@@ -122,30 +122,69 @@ Notes:
     const openaiApiKey = process.env.OPENAI_API_KEY;
     
     if (!openaiApiKey) {
-      // Return sample data if no API key
+      // Return comprehensive sample data if no API key
       return NextResponse.json({
         projectInfo: {
-          projectName: projectData.name || "Dhaka Flood Management Project",
+          projectName: projectData.name || "Bangladesh Dhaka Flood Management Project",
           projectNumber: projectData.number || "51-01",
           country: "Bangladesh",
           projectStatus: "Active",
-          projectType: "Grant",
-          fundingSource: "UK-ASEAN Green Finance Trust Fund $10 million",
-          sector: "Rural Development / Rural Flood Prevention",
+          projectType: "ADB Loan",
+          fundingSource: "Asian Development Bank - $300 million loan, Total project cost: $500 million",
+          sector: "Water and Sanitation / Urban Flood Management",
           targetDisaster: "Flooding",
-          climateInfrastructure: "Dike Construction/Reinforcement",
-          region: "Dhaka Station Area",
-          responsibleAgency: "District Regional Government",
-          description: "This project will support the government to achieve the outcome of having an effective and sustainable flood risk management system in operation and effectively maintained."
+          climateInfrastructure: "Drainage system expansion, pump station improvement, flood prediction system",
+          region: "Dhaka Metropolitan Area",
+          responsibleAgency: "Local Government Engineering Department (LGED), Bangladesh",
+          description: "This project aims to support the government in achieving effective and sustainable performance in operating and maintaining a flood risk management system. The project involves drainage system expansion (120km), pump station improvements, development of AI-based flood prediction models, and capacity building for operation and maintenance. Expected outcomes include 30% reduction in annual flood damage and 50% improvement in operational capacity."
         },
         climateInfrastructure: [
           {
             disaster: "Flooding",
-            measures: ["Embankment and dike construction", "Drainage system improvement", "Retention basin/detention pond construction", "Rainwater infiltration facilities", "Flood barrier/cutoff wall installation", "High ground shelter/evacuation route installation"]
+            measures: [
+              "Embankment and dike construction",
+              "Drainage system improvement", 
+              "Retention basin/detention pond construction",
+              "Rainwater infiltration facilities",
+              "Flood barrier/cutoff wall installation",
+              "High ground shelter/evacuation route installation"
+            ]
           },
           {
-            disaster: "Drought", 
-            measures: ["Reservoir/dam construction and expansion", "Irrigation facility improvement", "Groundwater development and management system", "Seawater desalination facilities", "Rainwater collection and utilization facilities"]
+            disaster: "Drought",
+            measures: [
+              "Reservoir/dam construction and expansion",
+              "Irrigation facility improvement",
+              "Groundwater development and management system",
+              "Seawater desalination facilities",
+              "Rainwater collection and utilization facilities"
+            ]
+          },
+          {
+            disaster: "Heat Wave",
+            measures: [
+              "Shade/cooling zone installation",
+              "Urban forest/green space creation",
+              "Cool roof and green roof systems",
+              "Air-conditioned shelter/rest areas"
+            ]
+          },
+          {
+            disaster: "Strong Wind/Typhoon",
+            measures: [
+              "Wind-resistant buildings and structures",
+              "Windbreak forest creation",
+              "Robust power infrastructure"
+            ]
+          },
+          {
+            disaster: "Sea Level Rise",
+            measures: [
+              "Coastal barrier/breakwater construction and reinforcement",
+              "Mangrove forest restoration/creation",
+              "Coastal wetland restoration",
+              "Relocation or elevation of infrastructure like roads/housing to higher ground"
+            ]
           }
         ]
       });

@@ -134,9 +134,12 @@ function CreateProjectContent() {
 
   // Handle file upload
   const handleFileUpload = (files: FileList, category?: string) => {
+    console.log('handleFileUpload called with:', files.length, 'files, category:', category); // Debug log
     setIsUploading(true);
 
     Array.from(files).forEach((file) => {
+      console.log('Processing file:', file.name, 'size:', file.size); // Debug log
+      
       // File size limit (10MB)
       if (file.size > 10 * 1024 * 1024) {
         setErrors(prev => [...prev, `${file.name} exceeds 10MB limit.`]);
@@ -155,7 +158,12 @@ function CreateProjectContent() {
           category: category || 'general'
         };
 
-        setAttachedFiles(prev => [...prev, newFile]);
+        console.log('Adding file to attachedFiles:', newFile.name, 'category:', newFile.category); // Debug log
+        setAttachedFiles(prev => {
+          const newList = [...prev, newFile];
+          console.log('New attachedFiles length:', newList.length); // Debug log
+          return newList;
+        });
       };
       reader.readAsDataURL(file);
     });
@@ -194,6 +202,9 @@ function CreateProjectContent() {
     e.preventDefault();
     const newErrors: string[] = [];
 
+    console.log('Current attachedFiles:', attachedFiles); // Debug log
+    console.log('attachedFiles.length:', attachedFiles.length); // Debug log
+
     // Input validation
     if (!projectData.name.trim()) {
       newErrors.push('Please enter project name.');
@@ -202,27 +213,19 @@ function CreateProjectContent() {
       newErrors.push('Please enter project number.');
     }
 
-    // Check required documents
+    // Check if at least one file is uploaded (relaxed validation)
+    if (attachedFiles.length === 0) {
+      newErrors.push('Please upload at least one document.');
+      console.log('No files attached!'); // Debug log
+    }
+
+    // Optional: Check required documents (show warning but allow creation)
     const uploadedCategories = new Set(attachedFiles.map(file => file.category));
     const missingDocs = requiredDocuments.filter(doc => !uploadedCategories.has(doc.key));
     
     if (missingDocs.length > 0) {
-      setMissingDocuments(missingDocs);
-      setShowMissingDocModal(true);
-      
-      // Scroll to first missing document
-      const firstMissingDoc = missingDocs[0];
-      const element = document.getElementById(`document-${firstMissingDoc.key}`);
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        
-        // Highlight section
-        element.classList.add('ring-4', 'ring-red-400', 'ring-opacity-75');
-        setTimeout(() => {
-          element.classList.remove('ring-4', 'ring-red-400', 'ring-opacity-75');
-        }, 3000);
-      }
-      return;
+      console.warn('Missing documents:', missingDocs.map(doc => doc.label));
+      // Allow creation but log warning
     }
 
     if (newErrors.length > 0) {
@@ -281,6 +284,13 @@ function CreateProjectContent() {
       const existingProjects = JSON.parse(localStorage.getItem('gcf_projects') || '[]');
       existingProjects.push(newProject);
       localStorage.setItem('gcf_projects', JSON.stringify(existingProjects));
+
+      // Also save project data for Dashboard analysis
+      localStorage.setItem('gcf_projectData', JSON.stringify({
+        projectName: projectData.name,
+        projectNumber: projectData.number,
+        attachedFiles: attachedFiles
+      }));
 
       // Go to Dashboard
       router.push('/dashboard');

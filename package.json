@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@google/earthengine": "^1.5.23",
     "chart.js": "^4.5.0",
     "next": "15.3.5",
     "react": "^19.0.0",
