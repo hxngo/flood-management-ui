@@ -241,7 +241,7 @@ function CreateProjectContent() {
     
     // Start LLM analysis process
     setIsAnalyzing(true);
-    setShowPlanPreview(true);
+    setShowPlanPreview(true); // 분석 진행 화면은 보이게 유지
     setAnalysisProgress(0);
 
     // Simulate analysis progress with intervals
@@ -256,6 +256,11 @@ function CreateProjectContent() {
     setTimeout(() => {
       clearInterval(interval);
       setAnalysisProgress(100);
+      
+      // 분석이 완료되면 대시보드로 자동 이동하도록 설정
+      setTimeout(() => {
+        router.push('/dashboard');
+      }, 1000); // 1초 후 대시보드로 이동
 
       // Generate project plan based on simulated file content analysis
       // This is a placeholder for actual LLM analysis

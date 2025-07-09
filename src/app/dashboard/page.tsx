@@ -5,7 +5,7 @@ import Link from 'next/link';
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('monitoring');
-  const [subTab, setSubTab] = useState('logs'); // logs와 plan 서브탭 선택 상태 추가
+  const [subTab, setSubTab] = useState('plan'); // 기본 탭을 plan으로 변경
   const [selectedYear, setSelectedYear] = useState('2013');
   const [generatedReport, setGeneratedReport] = useState('');
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
@@ -558,15 +558,6 @@ The project demonstrates solid 63% completion progress. The comprehensive approa
                 <div className="px-6 pt-4">
                   <div className="flex space-x-8">
                     <button
-                      onClick={() => setSubTab('logs')}
-                      className={`py-4 px-1 border-b-2 font-medium text-sm ${subTab === 'logs'
-                        ? 'border-blue-500 text-blue-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                      }`}
-                    >
-                      Project Activity Logs
-                    </button>
-                    <button
                       onClick={() => setSubTab('plan')}
                       className={`py-4 px-1 border-b-2 font-medium text-sm ${subTab === 'plan'
                         ? 'border-blue-500 text-blue-600'
@@ -575,60 +566,70 @@ The project demonstrates solid 63% completion progress. The comprehensive approa
                     >
                       Project Plan
                     </button>
+                    <button
+                      onClick={() => setSubTab('logs')}
+                      className={`py-4 px-1 border-b-2 font-medium text-sm ${subTab === 'logs'
+                        ? 'border-blue-500 text-blue-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      }`}
+                    >
+                      Project Activity Logs
+                    </button>
                   </div>
                 </div>
               </div>
               <div className="p-6">
                 {subTab === 'logs' && (
-                  <div className="space-y-3">
-                    <div className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                          <span className="font-medium text-gray-900">Giant Sea Wall Phase 1 Construction Completed</span>
-                          <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">blk_001</span>
-                        </div>
-                        <span className="text-sm text-gray-500">Jan 15, 2024</span>
-                      </div>
-                      <p className="text-sm text-gray-600 mb-2">자카르타 베이 방조제(NCICD) 1단계 구간 완공. 위성 및 해안 모니터링 시스템 가동으로 구조 안정성 확인됨.</p>
-                      <div className="flex items-center space-x-4 text-xs text-gray-500">
-                        <span className="flex items-center">
-                          <span className="mr-1">📍</span>
-                          -6.1063, 106.7912
-                        </span>
-                        <span className="flex items-center">
-                          <span className="mr-1">#</span>
-                          0x7d865e959b2466918c9863afca942d0fb89d7c9ac0c99bafc3749504ded97730...
-                        </span>
-                        <span className="px-2 py-1 rounded text-xs bg-green-100 text-green-800">
-                          SAFE
-                        </span>
-                      </div>
-                    </div>
-                    
-                    <div className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                          <span className="font-medium text-gray-900">Land Subsidence Warning in North Jakarta</span>
-                          <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">blk_002</span>
-                        </div>
-                        <span className="text-sm text-gray-500">Jan 20, 2024</span>
-                      </div>
-                      <p className="text-sm text-gray-600 mb-2">북부 자카르타 지역에서 이상성 지반 침하 속도 감지. 예상 속도보다 15% 빠른 농도로 해수면 침입 위험이 즉시 조치 필요.</p>
-                      <div className="flex items-center space-x-4 text-xs text-gray-500">
-                        <span className="flex items-center">
-                          <span className="mr-1">📍</span>
-                          -6.0892, 106.8151
-                        </span>
-                        <span className="flex items-center">
-                          <span className="mr-1">#</span>
-                          0xa1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456...
-                        </span>
-                        <span className="px-2 py-1 rounded text-xs bg-yellow-100 text-yellow-800">
-                          WARNING
-                        </span>
-                      </div>
+                  <div className="space-y-4">
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full border border-gray-200 rounded-lg">
+                        <thead>
+                          <tr className="bg-gray-50">
+                            <th className="py-3 px-4 border-b text-sm font-medium text-gray-700 text-left">시간</th>
+                            <th className="py-3 px-4 border-b text-sm font-medium text-gray-700 text-left">발신자 지갑</th>
+                            <th className="py-3 px-4 border-b text-sm font-medium text-gray-700 text-left">수신자 지갑</th>
+                            <th className="py-3 px-4 border-b text-sm font-medium text-gray-700 text-left">이체 금액</th>
+                            <th className="py-3 px-4 border-b text-sm font-medium text-gray-700 text-left">이벤트 유형</th>
+                            <th className="py-3 px-4 border-b text-sm font-medium text-gray-700 text-left">위성데이터증빙자료</th>
+                            <th className="py-3 px-4 border-b text-sm font-medium text-gray-700 text-left">검증상태</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr className="hover:bg-gray-50 transition-colors">
+                            <td className="py-3 px-4 border-b text-sm text-gray-800">2025.09.10</td>
+                            <td className="py-3 px-4 border-b text-sm text-gray-800">지역정부</td>
+                            <td className="py-3 px-4 border-b text-sm text-gray-800">A기관</td>
+                            <td className="py-3 px-4 border-b text-sm text-gray-800">$10000(40%)</td>
+                            <td className="py-3 px-4 border-b text-sm text-gray-800">최종 잔금 지급 요청</td>
+                            <td className="py-3 px-4 border-b text-sm text-gray-800">제방 면적 5,000m^2, 높이 3.5m 제방 건설 완료</td>
+                            <td className="py-3 px-4 border-b text-sm">
+                              <span className="px-2 py-1 rounded text-xs bg-yellow-100 text-yellow-800">▲</span>
+                            </td>
+                          </tr>
+                          <tr className="hover:bg-gray-50 transition-colors">
+                            <td className="py-3 px-4 border-b text-sm text-gray-800">2025.07.10</td>
+                            <td className="py-3 px-4 border-b text-sm text-gray-800">A기관</td>
+                            <td className="py-3 px-4 border-b text-sm text-gray-800">지역정부</td>
+                            <td className="py-3 px-4 border-b text-sm text-gray-800">$4000</td>
+                            <td className="py-3 px-4 border-b text-sm text-gray-800">50% 공정 보고</td>
+                            <td className="py-3 px-4 border-b text-sm text-gray-800">제방면적 5,000제곱미터, 높이 2.8m 생성</td>
+                            <td className="py-3 px-4 border-b text-sm">
+                              <span className="px-2 py-1 rounded text-xs bg-green-100 text-green-800">O</span>
+                            </td>
+                          </tr>
+                          <tr className="hover:bg-gray-50 transition-colors">
+                            <td className="py-3 px-4 border-b text-sm text-gray-800">2025.06.10</td>
+                            <td className="py-3 px-4 border-b text-sm text-gray-800">지역정부</td>
+                            <td className="py-3 px-4 border-b text-sm text-gray-800">B기관</td>
+                            <td className="py-3 px-4 border-b text-sm text-gray-800">$5000(25%)</td>
+                            <td className="py-3 px-4 border-b text-sm text-gray-800">건설 자재 구입</td>
+                            <td className="py-3 px-4 border-b text-sm text-gray-800">건설 현장 근처에 대규모 자재(모래 850톤, 철근 120톤)가 적재됨</td>
+                            <td className="py-3 px-4 border-b text-sm">
+                              <span className="px-2 py-1 rounded text-xs bg-green-100 text-green-800">O</span>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
                     </div>
                   </div>
                 )}
@@ -882,39 +883,7 @@ The project demonstrates solid 63% completion progress. The comprehensive approa
 
             {!generatedReport && !isGeneratingReport && (
               <div className="bg-white shadow rounded-lg p-8">
-                <h1 className="text-3xl font-bold text-center text-gray-900 mb-8">Climate Resilience Infrastructure Construction Project</h1>
-                <div className="space-y-8">
-                  <div className="border-l-4 border-green-500 pl-6">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-4">1. Flooding</h2>
-                    <div className="space-y-2">
-                      <div className="flex items-start">
-                        <span className="inline-block w-8 text-gray-600 font-medium">1.</span>
-                        <span className="text-gray-800 leading-relaxed">Embankment and dike construction</span>
-                      </div>
-                      <div className="flex items-start">
-                        <span className="inline-block w-8 text-gray-600 font-medium">2.</span>
-                        <span className="text-gray-800 leading-relaxed">Drainage system improvement</span>
-                      </div>
-                      <div className="flex items-start">
-                        <span className="inline-block w-8 text-gray-600 font-medium">3.</span>
-                        <span className="text-gray-800 leading-relaxed">Retention basin/detention pond construction</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="border-l-4 border-green-500 pl-6">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-4">2. Drought</h2>
-                    <div className="space-y-2">
-                      <div className="flex items-start">
-                        <span className="inline-block w-8 text-gray-600 font-medium">1.</span>
-                        <span className="text-gray-800 leading-relaxed">Reservoir/dam construction and expansion</span>
-                      </div>
-                      <div className="flex items-start">
-                        <span className="inline-block w-8 text-gray-600 font-medium">2.</span>
-                        <span className="text-gray-800 leading-relaxed">Irrigation facility improvement</span>
-                      </div>
-                    </div>
-                  </div>
+                <div className="space-y-8">                  
                 </div>
               </div>
             )}
