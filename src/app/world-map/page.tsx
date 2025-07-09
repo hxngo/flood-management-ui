@@ -25,7 +25,7 @@ export default function WorldMapPage() {
       <main className="max-w-7xl mx-auto">
         <div className="bg-white rounded-lg shadow-lg overflow-hidden">
           <div className="p-6">
-            <h2 className="text-xl font-bold mb-4 text-gray-800">Global Flood Management Projects</h2>
+            <h2 className="text-xl font-bold mb-4 text-gray-800">World Climate Resilience Infrastructure Projects Map</h2>
             <WorldMapPopup height="600px" />
             <div className="bg-blue-50 p-4 rounded-md mt-4">
               <p className="text-sm text-blue-700">
