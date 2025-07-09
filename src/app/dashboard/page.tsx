@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 
 export default function Dashboard() {
@@ -9,7 +9,7 @@ export default function Dashboard() {
   const [selectedYear, setSelectedYear] = useState('2013');
   const [generatedReport, setGeneratedReport] = useState('');
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
-  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<any[]>([]);  // 수정: File[] -> any[] (AttachedFile 객체 저장)
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showFileDropdown, setShowFileDropdown] = useState(false);
   const [isDraggingFile, setIsDraggingFile] = useState(false); // 파일 드래그 상태
@@ -25,6 +25,47 @@ export default function Dashboard() {
   // Ethiopia coordinates for satellite imagery
   const ethiopiaCenter = { lat: 11.2138, lng: 35.0930 };
   const years = ['2013', '2014', '2016', '2020'];
+  
+  // 생성된 프로젝트 계획 저장 상태
+  const [generatedPlan, setGeneratedPlan] = useState('');
+
+  // 로컬 스토리지에서 프로젝트 데이터 불러오기
+  useEffect(() => {
+    // 프로젝트 데이터 로드
+    const savedProjectData = localStorage.getItem('gcf_projectData');
+    if (savedProjectData) {
+      try {
+        const projectData = JSON.parse(savedProjectData);
+        
+        // 첨부 파일 설정
+        if (projectData.attachedFiles && projectData.attachedFiles.length > 0) {
+          setUploadedFiles(projectData.attachedFiles);
+          console.log('Loaded attached files:', projectData.attachedFiles);
+        }
+        
+        // 생성된 계획이 있으면 계획 상태 업데이트 및 탭 변경
+        if (projectData.generatedPlan) {
+          setGeneratedPlan(projectData.generatedPlan);
+          setSubTab('plan');
+        }
+        
+        // 다른 프로젝트 정보 업데이트
+        if (projectData.projectName) {
+          // 기존 projectInfo 객체 업데이트 (아래에서 정의됨)
+          updateProjectInfo({
+            projectName: projectData.projectName,
+            projectNumber: projectData.projectNumber || '63-07',
+            country: "Indonesia",
+            projectStatus: "Active",
+            fundingSource: "World Bank - $450 million loan",
+            description: "This project aims to protect Jakarta from sea level rise and land subsidence."
+          });
+        }
+      } catch (error) {
+        console.error('Error loading project data:', error);
+      }
+    }
+  }, []);
 
   // 줌 리셋 함수
   const resetZoom = () => {
@@ -130,15 +171,56 @@ export default function Dashboard() {
   // 파일 업로드 처리 함수
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      const newFiles = Array.from(e.target.files);
+      // 새 파일을 업로드하면 AttachedFile 형식으로 변환하여 저장
+      const newFiles = Array.from(e.target.files).map(file => {
+        return {
+          id: Date.now() + '-' + Math.random().toString(36).substring(2, 9),
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          dataUrl: URL.createObjectURL(file), // 실제 File 객체는 URL로 변환
+          uploadedAt: new Date().toISOString(),
+          category: 'general'
+        };
+      });
+      
       setUploadedFiles(prev => [...prev, ...newFiles]);
       setShowUploadModal(false);
+      
+      // localStorage에 파일 정보 업데이트
+      const savedProjectData = localStorage.getItem('gcf_projectData');
+      if (savedProjectData) {
+        try {
+          const projectData = JSON.parse(savedProjectData);
+          const updatedProjectData = {
+            ...projectData,
+            attachedFiles: [...(projectData.attachedFiles || []), ...newFiles]
+          };
+          localStorage.setItem('gcf_projectData', JSON.stringify(updatedProjectData));
+        } catch (error) {
+          console.error('Error updating project data:', error);
+        }
+      }
     }
   };
   
   // 파일 삭제 함수
   const removeFile = (index: number) => {
-    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+    setUploadedFiles(prev => prev.filter((_: any, i: number) => i !== index));
+    
+    // localStorage에서도 파일 삭제
+    const savedProjectData = localStorage.getItem('gcf_projectData');
+    if (savedProjectData) {
+      try {
+        const projectData = JSON.parse(savedProjectData);
+        if (projectData.attachedFiles) {
+          projectData.attachedFiles = projectData.attachedFiles.filter((_: any, i: number) => i !== index);
+          localStorage.setItem('gcf_projectData', JSON.stringify(projectData));
+        }
+      } catch (error) {
+        console.error('Error removing file from project data:', error);
+      }
+    }
   };
   
   // 드래그 앤 드롭 함수
@@ -166,13 +248,19 @@ export default function Dashboard() {
     }
   };
 
-  const projectInfo = {
+  // 프로젝트 정보 상태 관리
+  const [projectInfo, setProjectInfo] = useState({
     projectName: "Indonesia Jakarta Coastal Defense Strategy",
     projectNumber: "63-07",
     country: "Indonesia",
     projectStatus: "Active",
     fundingSource: "World Bank - $450 million loan",
     description: "This project aims to protect Jakarta from sea level rise and land subsidence."
+  });
+  
+  // 프로젝트 정보 업데이트 함수
+  const updateProjectInfo = (newInfo: any) => {
+    setProjectInfo(prev => ({ ...prev, ...newInfo }));
   };
 
   const generateReport = () => {
@@ -552,15 +640,15 @@ The project demonstrates solid 63% completion progress. The comprehensive approa
                       <div className="space-y-4">
                         <div>
                           <label className="block text-sm font-medium text-gray-500">Project Name</label>
-                          <p className="mt-1 text-lg text-gray-900">Indonesia Jakarta Coastal Defense Strategy</p>
+                          <p className="mt-1 text-lg text-gray-900">{projectInfo.projectName}</p>
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-500">Project Number</label>
-                          <p className="mt-1 text-lg text-gray-900">63-07</p>
+                          <p className="mt-1 text-lg text-gray-900">{projectInfo.projectNumber}</p>
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-500">Country</label>
-                          <p className="mt-1 text-lg text-gray-900">Indonesia</p>
+                          <p className="mt-1 text-lg text-gray-900">{projectInfo.country}</p>
                         </div>
                       </div>
                       <div className="space-y-4">
@@ -572,7 +660,7 @@ The project demonstrates solid 63% completion progress. The comprehensive approa
                         </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-500">Funding Source</label>
-                          <p className="mt-1 text-lg text-gray-900">World Bank - $450 million loan</p>
+                          <p className="mt-1 text-lg text-gray-900">{projectInfo.fundingSource}</p>
                         </div>
                       </div>
                     </div>
@@ -616,7 +704,7 @@ The project demonstrates solid 63% completion progress. The comprehensive approa
                                 <h4 className="text-sm font-semibold text-gray-700">Project Documents</h4>
                               </div>
                               <div className="max-h-60 overflow-y-auto">
-                                {uploadedFiles.map((file, index) => (
+                                {uploadedFiles.map((file: any, index: number) => (
                                   <div key={index} className="px-3 py-2 hover:bg-gray-100 flex items-center justify-between">
                                     <div className="flex items-center">
                                       <svg className="w-4 h-4 text-gray-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -646,10 +734,33 @@ The project demonstrates solid 63% completion progress. The comprehensive approa
                         </div>
                       </div>
                     </div>
-                    <div className="mb-6">
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">Risk Assessment</h3>
-                      <p className="text-gray-700">Jakarta faces severe flooding threats from multiple sources: sea level rise, land subsidence (sinking at 25cm per year in some areas), and high rainfall during the wet season from November to March. Approximately 40% of Jakarta is below sea level, making coastal areas particularly vulnerable.</p>
-                    </div>
+                    {generatedPlan ? (
+                      <div className="mb-6 bg-white rounded-lg shadow p-6">
+                        <h3 className="text-lg font-medium text-gray-900 mb-4">프로젝트 계획</h3>
+                        <div className="markdown-content">
+                          {generatedPlan.split('\n').map((line: string, index: number) => {
+                            if (line.startsWith('# ')) {
+                              return <h2 key={index} className="text-xl font-bold text-gray-800 mb-2">{line.substring(2)}</h2>;
+                            } else if (line.startsWith('## ')) {
+                              return <h3 key={index} className="text-lg font-semibold text-gray-800 mt-3 mb-2">{line.substring(3)}</h3>;
+                            } else if (line.startsWith('- ')) {
+                              return <li key={index} className="ml-5 text-sm text-gray-700">{line.substring(2)}</li>;
+                            } else if (line.startsWith('1. ') || line.startsWith('2. ') || line.startsWith('3. ') || line.startsWith('4. ') || line.startsWith('5. ')) {
+                              return <div key={index} className="ml-5 text-sm text-gray-700 mb-1">{line}</div>;
+                            } else if (line === '') {
+                              return <div key={index} className="h-2"></div>;
+                            } else {
+                              return <p key={index} className="text-sm text-gray-700 mb-2">{line}</p>;
+                            }
+                          })}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="mb-6">
+                        <h3 className="text-lg font-medium text-gray-900 mb-2">Risk Assessment</h3>
+                        <p className="text-gray-700">Jakarta faces severe flooding threats from multiple sources: sea level rise, land subsidence (sinking at 25cm per year in some areas), and high rainfall during the wet season from November to March. Approximately 40% of Jakarta is below sea level, making coastal areas particularly vulnerable.</p>
+                      </div>
+                    )}
                     
                     <div className="space-y-6">
                       <div className="bg-blue-50 p-6 rounded-lg">
@@ -814,9 +925,9 @@ The project demonstrates solid 63% completion progress. The comprehensive approa
       {/* 파일 업로드 모달 */}
       {showUploadModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+          <div className="bg-white rounded-lg p-6 w-full max-w-lg">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-medium text-gray-900">Upload Documents</h3>
+              <h3 className="text-xl font-medium text-gray-900">Upload Multiple Documents</h3>
               <button 
                 onClick={() => setShowUploadModal(false)}
                 className="text-gray-500 hover:text-gray-700"
@@ -828,11 +939,11 @@ The project demonstrates solid 63% completion progress. The comprehensive approa
             </div>
             
             <div className="mb-4">
-              <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="file-upload">
-                Select files to upload
+              <label className="block text-gray-700 text-sm font-bold mb-2">
+                Select multiple files to upload at once
               </label>
               <div 
-                className={`mt-1 flex justify-center px-6 pt-5 pb-6 border-2 ${isDraggingFile ? 'border-blue-500 bg-blue-50' : 'border-gray-300'} border-dashed rounded-md transition-colors`}
+                className={`mt-1 flex flex-col justify-center px-6 pt-5 pb-6 border-2 ${isDraggingFile ? 'border-blue-500 bg-blue-50' : 'border-gray-300'} border-dashed rounded-md transition-colors`}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
@@ -841,19 +952,58 @@ The project demonstrates solid 63% completion progress. The comprehensive approa
                   <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
                     <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
-                  <div className="flex text-sm text-gray-600">
-                    <label htmlFor="file-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none">
-                      <span>Browse files</span>
-                      <input id="file-upload" name="file-upload" type="file" className="sr-only" multiple onChange={handleFileUpload} />
+                  <div className="flex justify-center text-sm text-gray-600">
+                    <label htmlFor="multi-file-upload" className="relative cursor-pointer bg-blue-100 rounded-md font-medium text-blue-600 hover:text-blue-500 px-4 py-2 focus-within:outline-none">
+                      <span>Select multiple files</span>
+                      <input 
+                        id="multi-file-upload" 
+                        name="multi-file-upload" 
+                        type="file" 
+                        className="sr-only" 
+                        multiple 
+                        onChange={handleFileUpload} 
+                      />
                     </label>
-                    <p className="pl-1">or drag and drop</p>
                   </div>
-                  <p className="text-xs text-gray-500">PDF, DOC, DOCX, XLS, XLSX up to 10MB</p>
+                  <p className="text-xs text-gray-500 mt-2">PDF, DOC, XLS, JPG, PNG up to 10MB each</p>
+                  <p className="text-sm text-blue-500 mt-3">Or drag and drop multiple files here</p>
                 </div>
               </div>
+
+              {/* 업로드 파일 미리보기 */}
+              {uploadedFiles.length > 0 && (
+                <div className="mt-4 p-3 bg-gray-50 rounded-md">
+                  <h4 className="font-medium text-gray-700 mb-2">Attached Files ({uploadedFiles.length})</h4>
+                  <div className="max-h-40 overflow-y-auto">
+                    {uploadedFiles.map((file: any, index: number) => (
+                      <div key={index} className="flex justify-between items-center py-2 border-b border-gray-200 last:border-0">
+                        <div className="flex items-center">
+                          <div className="bg-blue-100 rounded p-1 mr-2">
+                            <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                          </div>
+                          <div>
+                            <p className="text-xs font-medium text-gray-900 truncate max-w-[200px]">{file.name}</p>
+                            <p className="text-xs text-gray-500">{(file.size / 1024).toFixed(1)} KB</p>
+                          </div>
+                        </div>
+                        <button 
+                          onClick={() => removeFile(index)}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
             
-            <div className="flex justify-end space-x-3">
+            <div className="flex justify-end space-x-3 mt-4">
               <button
                 className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
                 onClick={() => setShowUploadModal(false)}

@@ -340,7 +340,7 @@ export default function Home() {
           {/* Project Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {/* First box: Add new project */}
-            <Link href="/dashboard" className="block">
+            <Link href="/create-project" className="block">
               <div className="bg-white rounded-lg shadow-lg border border-gray-200 hover:border-green-300 hover:shadow-xl transition-all duration-200 cursor-pointer h-96 flex items-center justify-center">
                 <div className="text-center">
                   <div className="text-6xl text-gray-300 mb-4">+</div>
