@@ -329,11 +329,7 @@ export default function Home() {
           
           {/* Navigation Buttons */}
           <div className="flex justify-end mb-8 px-8">
-            <div className="flex space-x-4">
-              <Link href="/dashboard" className="inline-flex items-center px-4 py-2 bg-blue-100 text-blue-700 font-medium rounded-md hover:bg-blue-200 transition-colors">
-                <span className="mr-2">📊</span>
-                Dashboard
-              </Link>
+            <div>
               <Link href="/world-map" className="inline-flex items-center px-4 py-2 bg-green-100 text-green-700 font-medium rounded-md hover:bg-green-200 transition-colors">
                 <span className="mr-2">🌎</span>
                 World Map
